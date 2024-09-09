@@ -23,7 +23,7 @@
 </head>
 <body class="relative">
     <h1 class="absolute top-5 left-1/2 transform -translate-x-1/2 text-white text-2xl z-10">Move the Mushroom!</h1>
-    <div class="absolute top-5 left-1/2 transform -translate-x-1/2 text-white text-xl z-10">
+    <div class="absolute top-16 left-1/2 transform -translate-x-1/2 text-white text-xl z-10">
         <label for="character-select">Choose a character:</label>
         <select id="character-select" class="ml-2 bg-gray-800 text-white px-2 py-1 rounded">
             <option value="mario">Mario</option>
@@ -31,8 +31,9 @@
             <option value="peach">Peach</option>
         </select>
     </div>
+
     <div id="controlled-element" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-cover border-4 border-black rounded-lg" style="background-image: url('png-clipart-mario-mario-thumbnail.png');">
-        <div class="absolute top-[-20px] left-1/2 transform -translate-x-1/2 w-24 h-2 bg-red-500 border-2 border-black rounded overflow-hidden">
+        <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-24 h-2 bg-red-500 border-2 border-black rounded overflow-hidden">
             <div id="health-bar-inner" class="h-full bg-green-500 w-full"></div>
         </div>
     </div>
@@ -52,7 +53,7 @@
         let positionY = 50;
         let health = 100;
         let score = 0;
-        const numObstacles = 5;
+        const numObstacles = 40;
         const obstacles = [];
         let animationFrameId;
         let lastHitTime = Date.now();
@@ -87,18 +88,9 @@
             controlledElement.style.backgroundImage = `url('${imageUrl}')`;
         }
 
-        function createObstacle(type) {
+        function createObstacle() {
             const obstacle = document.createElement('div');
-            obstacle.className = 'absolute w-12 h-12 border-2 border-black rounded-full';
-            
-            if (type === 'danger') {
-                obstacle.classList.add('bg-red-500');
-                obstacle.dataset.type = 'danger'; // Add a data attribute to identify danger obstacles
-            } else if (type === 'health') {
-                obstacle.classList.add('bg-green-500');
-                obstacle.dataset.type = 'health'; // Add a data attribute to identify health obstacles
-            }
-
+            obstacle.className = 'absolute w-12 h-12 bg-red-500 border-2 border-black rounded-full';
             obstacle.style.top = Math.random() * window.innerHeight + 'px';
             obstacle.style.left = Math.random() * window.innerWidth + 'px';
             obstacle.directionX = Math.random() > 0.5 ? 1 : -1;
@@ -137,9 +129,11 @@
                 const elementWidth = controlledElement.offsetWidth;
                 const elementHeight = controlledElement.offsetHeight;
 
+                // Calculate new position
                 let newPositionX = (positionX / 100) * (window.innerWidth - elementWidth);
                 let newPositionY = (positionY / 100) * (window.innerHeight - elementHeight);
 
+                // Constrain within screen bounds
                 newPositionX = Math.max(0, Math.min(window.innerWidth - elementWidth, newPositionX));
                 newPositionY = Math.max(0, Math.min(window.innerHeight - elementHeight, newPositionY));
 
@@ -173,13 +167,12 @@
         }
 
         function checkCollision() {
-            if (invincible) return;
+            if (invincible) return; // Skip collision check if invincible
 
             const controlledRect = controlledElement.getBoundingClientRect();
 
             obstacles.forEach(obstacle => {
                 const obstacleRect = obstacle.getBoundingClientRect();
-                const obstacleType = obstacle.dataset.type;
 
                 if (
                     controlledRect.left < obstacleRect.right &&
@@ -187,19 +180,12 @@
                     controlledRect.top < obstacleRect.bottom &&
                     controlledRect.bottom > obstacleRect.top
                 ) {
-                    if (obstacleType === 'danger') {
-                        console.log('Ouch! You got hit by the obstacle!');
-                        health -= 20;
-                        updateHealthBar();
-                        score = 0;
-                        localStorage.setItem('score', score);
-                        updateScoreboard();
-                    } else if (obstacleType === 'health') {
-                        console.log('Yay! You got health from the obstacle!');
-                        health = Math.min(100, health + 20); // Increase health but cap it at 100
-                        updateHealthBar();
-                        updateScore();
-                    }
+                    console.log('Ouch! You got hit by the obstacle!');
+                    health -= 20;
+                    updateHealthBar();
+                    score = 0;
+                    localStorage.setItem('score', score);
+                    updateScoreboard();
                     lastHitTime = Date.now();
                 }
             });
@@ -231,22 +217,25 @@
 
         function increaseScoreOverTime() {
             scoreIntervalId = setInterval(() => {
-                if (!gameOver && !invincible) {
+                const now = Date.now();
+                if (now - lastHitTime >= 1000) {
                     updateScore();
                 }
             }, 1000);
         }
 
-        function gameStart() {
+        function startInvincibility() {
             invincible = true;
             invincibilityEndTime = Date.now() + 5000; // 5 seconds of invincibility
 
-            const invincibilityInterval = setInterval(() => {
-                if (Date.now() > invincibilityEndTime) {
-                    invincible = false;
-                    clearInterval(invincibilityInterval);
-                }
-            }, 100);
+            setTimeout(() => {
+                invincible = false;
+            }, 5000);
+        }
+
+        function gameStart() {
+            setCharacterImage();
+            startInvincibility();
         }
 
         tryAgainButton.addEventListener('click', () => {
@@ -255,18 +244,25 @@
 
         characterSelect.addEventListener('change', setCharacterImage);
 
-        // Create both types of obstacles
-        for (let i = 0; i < numObstacles; i++) {
-            // Randomly decide the type of obstacle
-            createObstacle(Math.random() > 0.5 ? 'danger' : 'health');
+        document.addEventListener('keydown', handleKeyPress);
+
+        // Initialize the game
+        function initializeGame() {
+            // Create obstacles
+            for (let i = 0; i < numObstacles; i++) {
+                createObstacle();
+            }
+
+            // Start moving obstacles and score increase over time
+            moveObstacles();
+            increaseScoreOverTime();
+
+            // Start the game and apply initial invincibility
+            gameStart();
         }
 
-        // Start moving obstacles and increasing score over time
-        moveObstacles();
-        increaseScoreOverTime();
-
-        // Start the game and apply initial invincibility
-        gameStart();
+        // Run the game initialization
+        initializeGame();
     </script>
 </body>
 </html>
