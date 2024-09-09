@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermarket Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #007bff;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #cccccc;
+            color: black;
+        }
+        .btn-secondary:hover {
+            background-color: #b3b3b3;
+        }
+    </style>
+    <script>
+        var products = [];
+
+        function addToCart(productName) {
+            var quantity = parseInt(document.getElementById(productName).value);
+
+            var existingProduct = products.find(function(product) {
+                return product.name === productName;
+            });
+
+            if (existingProduct) {
+                existingProduct.quantity += quantity;
+            } else {
+                var product = {
+                    name: productName,
+                    quantity: quantity
+                };
+                products.push(product);
+            }
+
+            document.getElementById(productName).value = "";
+            console.log(products);
+            updateCartDisplay();
+        }
+
+        function checkout() {
+            var output = "Checkout:\n";
+
+            products.forEach(function(product) {
+                output += product.name + ": " + product.quantity + "\n";
+            });
+
+            document.getElementById("checkoutInfo").textContent = output;
+        }
+
+        function addCustomProduct() {
+            var productName = document.getElementById('customProductName').value;
+            var quantity = parseInt(document.getElementById('customProductQuantity').value);
+
+            if (productName && quantity > 0) {
+                var customProduct = {
+                    name: productName,
+                    quantity: quantity
+                };
+
+                products.push(customProduct);
+                document.getElementById('customProductName').value = "";
+                document.getElementById('customProductQuantity').value = "";
+                console.log(products);
+                updateCartDisplay();
+            }
+        }
+
+        function updateCartDisplay() {
+            var cartOutput = "Cart:\n";
+
+            products.forEach(function(product) {
+                cartOutput += product.name + ": " + product.quantity + "\n";
+            });
+
+            document.getElementById("cartInfo").textContent = cartOutput;
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto mt-10">
+        <div class="header text-center">
+            <h1 class="text-4xl font-bold text-white">Welcome to the Supermarket</h1>
+            <img src="/appielogo.png" alt="Supermarket" class="mx-auto mt-4 w-24 h-24">
+        </div>
+        <div class="flex flex-wrap justify-center mt-8 space-x-4">
+            <div class="mb-4">
+                <label for="apple" class="block text-gray-700 text-sm font-bold mb-2">Apple:</label>
+                <input id="apple" type="number" placeholder="Quantity" class="border border-gray-300 rounded px-4 py-2 mb-2">
+                <button class="btn-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="addToCart('apple')">
+                    Add to Cart
+                </button>
+            </div>
+            <div class="mb-4">
+                <label for="banana" class="block text-gray-700 text-sm font-bold mb-2">Banana:</label>
+                <input id="banana" type="number" placeholder="Quantity" class="border border-gray-300 rounded px-4 py-2 mb-2">
+                <button class="btn-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="addToCart('banana')">
+                    Add to Cart
+                </button>
+            </div>
+            <div class="mb-4">
+                <label for="orange" class="block text-gray-700 text-sm font-bold mb-2">Orange:</label>
+                <input id="orange" type="number" placeholder="Quantity" class="border border-gray-300 rounded px-4 py-2 mb-2">
+                <button class="btn-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="addToCart('orange')">
+                    Add to Cart
+                </button>
+            </div>
+            <div class="mb-4">
+                <label for="customProductName" class="block text-gray-700 text-sm font-bold mb-2">Custom Product:</label>
+                <input id="customProductName" type="text" placeholder="Product Name" class="border border-gray-300 rounded px-4 py-2 mb-2">
+                <input id="customProductQuantity" type="number" placeholder="Quantity" class="border border-gray-300 rounded px-4 py-2 mb-2">
+                <button class="btn-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="addCustomProduct()">
+                    Add Custom Product
+                </button>
+            </div>
+        </div>
+        <div class="flex justify-center mt-8">
+            <button class="btn-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="checkout()">
+                Checkout
+            </button>
+        </div>
+        <div id="cartInfo" class="mt-4 text-center"></div>
+        <div id="checkoutInfo" class="mt-4 text-center"></div>
+    </div>
+</body>
+</html>
